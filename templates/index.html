@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Supplies Request Form - HOKU</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div id="root"></div>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>Office Supplies Request Form</h1>
+                    <p>L. Jayme Street, Mandaue City, Cebu</p>
+                </div>
+                <div class="logo-section">
+                     <img src="{{ url_for('static', filename='images/logo 1.png') }}" alt="HOKU Logo" style="height: 100px; margin-right: -20px;">
+                    <div class="logo-tagline">
+                        <h1>HOKU</h1>
+                        PROPERTY<br>
+                        MANAGEMENT<br>
+                        SERVICES
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-body">
+            <div class="info-grid">
+                <div class="form-group">
+                    <label>Date</label>
+                <input type="date" id="formDate">
+            </div>
+                <div class="form-group">
+                    <label>Department</label>
+                <select id="department">
+                    <option value="">Select Department</option>
+                    <option value="Auxiliary">Auxiliary</option>
+                    <option value="HR">Human Resources</option>
+                    <option value="Finance">Finance & Accounting</option>
+                    <option value="CS">Customer Care</option>
+                    <option value="Operations">Engineering</option>
+                    <option value="FD">Front Office</option>
+                </select>
+            </div>
+                <div class="form-group">
+                    <label>MRS Number</label>
+                <input type="text" id="mrsNo" value="MRS-2026-000">
+            </div>  
+        </div>
+            <div class="button-group">
+                <button class="btn-add" onclick="addRow()"><span>+ Add Row</span></button>
+                <button class="btn-clear" onclick="clearForm()"><span>↻ Clear Form</span></button>
+                <button class="btn-print" onclick="window.print()"><span>🖨 Print Form</span></button>
+            </div>
+            <h2 class="section-title">Item Details</h2>
+                
+            <div class="table-container">
+                <table id="itemsTable">
+            <thead>
+                <tr>
+                            <th>No.</th>
+                    <th>Items Description</th>
+                            <th style="width: 120px;">Quantity</th>
+                            <th style="width: 120px;">Unit</th>
+                    <th>Purpose</th>
+                    <th style="width: 60px;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+            </div>
+
+        <div class="signatures">
+            <div class="signature-block">
+                <h3>Requested by:</h3>
+                <div class="signature-field">
+                        <label>Name</label>
+                    <input type="text" id="reqName">
+                </div>
+                <div class="signature-field">
+                        <label>Position</label>
+                    <input type="text" id="reqPosition">
+                </div>
+                <div class="signature-field">
+                        <label>Date</label>
+                    <input type="date" id="reqDate">
+                </div>
+                <div class="signature-field">
+                        <label>Signature</label>
+                    <input type="text" id="reqSignature" placeholder="">
+                </div>
+            </div>
+
+            <div class="signature-block">
+                <h3>Approved by:</h3>
+                <div class="signature-field">
+                        <label>Name</label>
+                    <input type="text" id="appName">
+                </div>
+                <div class="signature-field">
+                        <label>Position</label>
+                    <input type="text" id="appPosition">
+                </div>
+                <div class="signature-field">
+                        <label>Date</label>
+                    <input type="date" id="appDate">
+                </div>
+                <div class="signature-field">
+                        <label>Signature</label>
+                    <input type="text" id="appSignature" placeholder="">
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 HOKU Innovative Professional Services. All rights reserved.</p>
+        </div>
+    </div>
+
+</body>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</html>

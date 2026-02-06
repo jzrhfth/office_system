@@ -1,0 +1,39 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}All Requests - Office Supplies System{% endblock %}
+
+{% block header_title %}Requests{% endblock %}
+
+{% block header_desc %}View and manage supply requests{% endblock %}
+
+{% block content %}
+    <div class="dashboard-wrapper">
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="dashboard-header">
+                <h1 class="dashboard-title">All Requests</h1>
+            </div>
+
+            <!-- Requests Table -->
+            <div class="tables-grid">
+                <div class="table-card">
+                    <table class="styled-table">
+                        <thead>
+                            <tr>
+                                <th>MRS No.</th>
+                                <th>Date</th>
+                                <th>Department</th>
+                                <th>Requested By</th>
+                                <th>Approved By</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+{% endblock %}

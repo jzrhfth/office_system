@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stylev2.css') }}?v=2.0">
+</head>
+<body>
+    <header class="admin-header">
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='images/logo 1.png') }}" alt="Logo" class="logo-img">
+                <div class="logo-text-group">
+                    <h1 class="main">HOKU PMS</h1>
+                </div>
+            </div>
+            <div class="header-info">
+                <div class="header-title">{% block header_title %}{% endblock %}</div>
+                <div class="header-desc">{% block header_desc %}{% endblock %}</div>
+            </div>
+        </div>
+
+        <div class="header-right">
+
+            <button type="button" class="icon-btn" title="Notifications">
+                <i class="fa-regular fa-bell"></i>
+                <span class="notification-badge"></span>
+            </button>
+
+            <div class="user-profile">
+                <div class="user-avatar">AD</div>
+                <div class="user-info">
+                    <span class="user-name">Admin</span>
+                    <span class="user-role">Administrator</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <aside class="sidebar" id="sidebar">
+        <ul class="nav">
+            <li class="nav-item" data-page="dashboard">
+                <a class="nav-link" href="{{ url_for('dashboard') }}">
+                    <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+                    <span class="menu-title">Dashboard</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="inventory">
+                <a class="nav-link" href="{{ url_for('inventory') }}">
+                    <span class="nav-icon"><i class="fas fa-boxes"></i></span>
+                    <span class="menu-title">Inventory</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="requests">
+                <a class="nav-link" href="{{ url_for('requests') }}">
+                    <span class="nav-icon"><i class="fas fa-file-invoice"></i></span>
+                    <span class="menu-title">Requests</span>
+                </a>
+            </li>
+
+            <li class="nav-item has-submenu" data-page="profile change-password">
+                <a class="nav-link" href="#">
+                    <span class="nav-icon"><i class="fas fa-cog"></i></span>
+                    <span class="menu-title">Settings</span>
+                    <i class="fas fa-chevron-down menu-arrow"></i>
+                </a>
+                <div class="submenu">
+                    <ul class="submenu-item">
+                        <li><a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> My Profile</a></li>
+                        <li><a href="{{ url_for('change_password') }}"><i class="fas fa-key"></i> Change Password</a></li>
+                    </ul>
+                </div>
+            </li>
+
+            <li class="nav-item" data-page="logout">
+                <a class="nav-link" href="{{ url_for('logout') }}" onclick="return confirm('Are you sure you want to log out?');">
+                    <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span>
+                    <span class="menu-title">Log Out</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+    <div class="sidebar-overlay d-none" id="sidebarOverlay"></div>
+
+    {% block content %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='js/script1.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Dashboard - Office Supplies System{% endblock %}
+
+{% block header_title %}Dashboard{% endblock %}
+
+{% block header_desc %}Overview of system statistics{% endblock %}
+
+{% block content %}
+    <div class="dashboard-wrapper">
+        <main class="main-content">
+            <div class="top-bar">
+                <h2>Dashboard Overview</h2>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon bg-blue">
+                        <i class="fa-solid fa-file-invoice"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>0</h3>
+                        <p>Total Requests</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-orange">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>0</h3>
+                        <p>Pending Approval</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-green">
+                        <i class="fa-solid fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>0</h3>
+                        <p>Approved</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-purple">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>0</h3>
+                        <p>Low Stock Items</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chart Section -->
+            <div class="chart-section">
+                <div class="chart-header">
+                    <h3>Request Statistics</h3>
+                    <div class="chart-filters">
+                        <button class="chart-filter-btn active" onclick="updateChart('weekly', this)">Weekly</button>
+                        <button class="chart-filter-btn" onclick="updateChart('monthly', this)">Monthly</button>
+                        <button class="chart-filter-btn" onclick="updateChart('yearly', this)">Yearly</button>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="requestsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Requests Table -->
+            <div class="recent-section">
+                <div class="section-header">
+                    <h3>Recent Requests</h3>
+                    <a href="#" class="btn-new"><i class="fa-solid fa-plus"></i> Create New</a>
+                </div>
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>MRS No.</th>
+                            <th>Date</th>
+                            <th>Department</th>
+                            <th>Requested By</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('requestsChart').getContext('2d');
+            
+            // Mock Data for Statistics
+            const data = {
+                weekly: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Requests',
+                        data: [0, 0, 0, 0, 0, 0, 0],
+                        borderColor: '#4A90E2',
+                        backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                monthly: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Requests',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                yearly: {
+                    labels: ['2021', '2022', '2023', '2024', '2025'],
+                    datasets: [{
+                        label: 'Requests',
+                        data: [0, 0, 0, 0, 0],
+                        borderColor: '#9c27b0',
+                        backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                }
+            };
+
+            let myChart = new Chart(ctx, {
+                type: 'line',
+                data: data.weekly,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#f0f0f0' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            window.updateChart = function(period, btn) {
+                // Update active button state
+                document.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update chart data
+                myChart.data = data[period];
+                myChart.update();
+            }
+        });
+    </script>
+{% endblock %}
