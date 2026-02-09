@@ -20,7 +20,7 @@
                         <i class="fa-solid fa-file-invoice"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>0</h3>
+                        <h3>{{ total_requests }}</h3>
                         <p>Total Requests</p>
                     </div>
                 </div>
@@ -29,7 +29,7 @@
                         <i class="fa-solid fa-clock"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>0</h3>
+                        <h3>{{ pending_requests }}</h3>
                         <p>Pending Approval</p>
                     </div>
                 </div>
@@ -38,7 +38,7 @@
                         <i class="fa-solid fa-check-circle"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>0</h3>
+                        <h3>{{ approved_requests }}</h3>
                         <p>Approved</p>
                     </div>
                 </div>
@@ -47,7 +47,7 @@
                         <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>0</h3>
+                        <h3>{{ low_stock_items }}</h3>
                         <p>Low Stock Items</p>
                     </div>
                 </div>
@@ -72,7 +72,6 @@
             <div class="recent-section">
                 <div class="section-header">
                     <h3>Recent Requests</h3>
-                    <a href="#" class="btn-new"><i class="fa-solid fa-plus"></i> Create New</a>
                 </div>
                 <table class="styled-table">
                     <thead>
@@ -81,11 +80,21 @@
                             <th>Date</th>
                             <th>Department</th>
                             <th>Requested By</th>
+                            <th>Approved By</th>
                             <th>Status</th>
-                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
+                        {% for request in recent_requests %}
+                        <tr>
+                            <td>{{ request.mrs_no }}</td>
+                            <td>{{ request.request_date }}</td>
+                            <td>{{ request.department }}</td>
+                            <td>{{ request.requester_name }}</td>
+                            <td>{{ request.approver_name }}</td>
+                            <td>{{ request.status }}</td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

@@ -6,10 +6,8 @@ USE office_supplies_db;
 CREATE TABLE IF NOT EXISTS inventory (
     id INT AUTO_INCREMENT PRIMARY KEY,
     item_name VARCHAR(255) NOT NULL,
-    category VARCHAR(100),
     stock_quantity INT DEFAULT 0,
     unit VARCHAR(50), -- Displayed in table header
-    reorder_level INT DEFAULT 10,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -27,13 +25,11 @@ CREATE TABLE IF NOT EXISTS requests (
     requester_name VARCHAR(255),
     requester_position VARCHAR(100),
     requester_date DATE,
-    requester_signature TEXT,
     
     -- Approver Details (from index.html signatures)
     approver_name VARCHAR(255),
     approver_position VARCHAR(100),
     approver_date DATE,
-    approver_signature TEXT,
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -55,9 +51,10 @@ CREATE TABLE IF NOT EXISTS request_items (
 CREATE TABLE IF NOT EXISTS admin (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(255),
     password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Insert default admin user
-INSERT IGNORE INTO admin (username, password) VALUES ('admin', 'admin123');
+INSERT IGNORE INTO admin (username, email, password) VALUES ('admin', 'admin@example.com', 'admin123');

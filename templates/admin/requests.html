@@ -30,10 +30,99 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% for request in requests %}
+                            <tr>
+                                <td>{{ request.mrs_no }}</td>
+                                <td>{{ request.request_date }}</td>
+                                <td>{{ request.department }}</td>
+                                <td>{{ request.requester_name }}</td>
+                                <td>{{ request.approver_name }}</td>
+                                <td>{{ request.status }}</td>
+                                <td>
+                                    <button class="btn-action" title="View"><i class="fa-regular fa-eye"></i></button>
+                                    <button class="btn-action" title="Edit"
+                                            data-id="{{ request.id }}"
+                                            data-mrs="{{ request.mrs_no }}"
+                                            data-dept="{{ request.department }}"
+                                            data-req="{{ request.requester_name }}"
+                                            data-app="{{ request.approver_name or '' }}"
+                                            data-status="{{ request.status }}"
+                                            onclick="openEditModal(this)"><i class="fa-regular fa-pen-to-square"></i></button>
+                                    <form action="{{ url_for('delete_request', id=request.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this request?');">
+                                        <button type="submit" class="btn-action" title="Delete" style="color: #e74c3c;"><i class="fa-regular fa-trash-can"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
         </main>
     </div>
+
+    <!-- Edit Request Modal -->
+    <div class="modal-overlay" id="editRequestModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Request</h3>
+                <button class="modal-close" onclick="closeModal('editRequestModal')"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="editRequestForm" method="POST">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>MRS No.</label>
+                        <input type="text" id="edit_mrs_no" name="mrs_no" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <input type="text" id="edit_department" name="department" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group">
+                        <label>Requested By</label>
+                        <input type="text" id="edit_requester_name" name="requester_name" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group">
+                        <label>Approved By</label>
+                        <input type="text" id="edit_approver_name" name="approver_name" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="edit_status" name="status" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal('editRequestModal')">Cancel</button>
+                    <button type="submit" class="btn-save">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function openEditModal(btn) {
+            const id = btn.getAttribute('data-id');
+            document.getElementById('edit_mrs_no').value = btn.getAttribute('data-mrs');
+            document.getElementById('edit_department').value = btn.getAttribute('data-dept');
+            document.getElementById('edit_requester_name').value = btn.getAttribute('data-req');
+            document.getElementById('edit_approver_name').value = btn.getAttribute('data-app');
+            document.getElementById('edit_status').value = btn.getAttribute('data-status');
+            document.getElementById('editRequestForm').action = "/requests/edit/" + id;
+            document.getElementById('editRequestModal').classList.add('active');
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('active');
+            }
+        }
+    </script>
 {% endblock %}
