@@ -17,7 +17,25 @@
             <!-- Requests Table -->
             <div class="tables-grid">
                 <div class="table-card">
-                    <table class="styled-table">
+                    <div class="table-title">
+                        <span>All Requests</span>
+                        <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+                            <select id="deptFilter" onchange="searchRequestsTable()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">All Departments</option>
+                                <option value="Auxiliary">Auxiliary</option>
+                                <option value="Human Resources">Human Resources</option>
+                                <option value="Finance & Accounting">Finance & Accounting</option>
+                                <option value="Customer Care">Customer Care</option>
+                                <option value="Operations">Engineering</option>
+                                <option value="Front Office">Front Office</option>
+                            </select>
+                            <div style="position: relative;">
+                                <i class="fa-solid fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #aaa;"></i>
+                                <input type="text" id="searchInput" onkeyup="searchRequestsTable()" placeholder="Search..." style="padding: 8px 8px 8px 35px; border: 1px solid #ddd; border-radius: 4px; width: 215px;">
+                            </div>
+                        </div>
+                    </div>
+                    <table class="styled-table" id="requestsTable">
                         <thead>
                             <tr>
                                 <th>MRS No.</th>
@@ -39,17 +57,17 @@
                                 <td>{{ request.approver_name }}</td>
                                 <td>{{ request.status }}</td>
                                 <td>
-                                    <button class="btn-action" title="View"><i class="fa-regular fa-eye"></i></button>
-                                    <button class="btn-action" title="Edit"
-                                            data-id="{{ request.id }}"
-                                            data-mrs="{{ request.mrs_no }}"
-                                            data-dept="{{ request.department }}"
-                                            data-req="{{ request.requester_name }}"
-                                            data-app="{{ request.approver_name or '' }}"
-                                            data-status="{{ request.status }}"
-                                            onclick="openEditModal(this)"><i class="fa-regular fa-pen-to-square"></i></button>
-                                    <form action="{{ url_for('delete_request', id=request.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this request?');">
-                                        <button type="submit" class="btn-action" title="Delete" style="color: #e74c3c;"><i class="fa-regular fa-trash-can"></i></button>
+                                    <i class="fa-regular fa-eye btn-action" title="View" style="cursor: pointer;"
+                                       data-id="{{ request.id }}"
+                                       data-mrs="{{ request.mrs_no }}"
+                                       data-dept="{{ request.department }}"
+                                       data-req="{{ request.requester_name }}"
+                                       data-app="{{ request.approver_name or '' }}"
+                                       data-date="{{ request.request_date }}"
+                                       data-status="{{ request.status }}"
+                                       onclick="openViewModal(this)"></i>
+                                    <form action="{{ url_for('delete_request', id=request.id) }}" method="POST" style="display:inline;">
+                                        <i class="fa-solid fa-trash btn-action" title="Delete" style="color: #e74c3c; cursor: pointer;" onclick="if(confirm('Are you sure you want to delete this request?')) this.closest('form').submit()"></i>
                                     </form>
                                 </td>
                             </tr>
@@ -61,62 +79,168 @@
         </main>
     </div>
 
-    <!-- Edit Request Modal -->
-    <div class="modal-overlay" id="editRequestModal">
-        <div class="modal">
+    <!-- View Request Items Modal -->
+    <div class="modal-overlay" id="viewRequestModal">
+        <div class="modal" style="width: 100%; max-width: 800px;">
             <div class="modal-header">
-                <h3 class="modal-title">Edit Request</h3>
-                <button class="modal-close" onclick="closeModal('editRequestModal')"><i class="fa-solid fa-times"></i></button>
+                <h3 class="modal-title">Request Details</h3>
+                <button class="modal-close" onclick="closeModal('viewRequestModal')"><i class="fa-solid fa-times"></i></button>
             </div>
-            <form id="editRequestForm" method="POST">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>MRS No.</label>
-                        <input type="text" id="edit_mrs_no" name="mrs_no" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                    <div>
+                        <small style="color: #666;">MRS No.</small>
+                        <div style="font-weight: 600;" id="view_mrs"></div>
                     </div>
-                    <div class="form-group">
-                        <label>Department</label>
-                        <input type="text" id="edit_department" name="department" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                    <div>
+                        <small style="color: #666;">Date</small>
+                        <div style="font-weight: 600;" id="view_date"></div>
                     </div>
-                    <div class="form-group">
-                        <label>Requested By</label>
-                        <input type="text" id="edit_requester_name" name="requester_name" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                    <div>
+                        <small style="color: #666;">Department</small>
+                        <div style="font-weight: 600;" id="view_dept"></div>
                     </div>
-                    <div class="form-group">
-                        <label>Approved By</label>
-                        <input type="text" id="edit_approver_name" name="approver_name" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                    <div>
+                        <small style="color: #666;">Requested By</small>
+                        <div style="font-weight: 600;" id="view_req"></div>
                     </div>
-                    <div class="form-group">
-                        <label>Status</label>
-                        <select id="edit_status" name="status" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-                            <option value="Pending">Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                        </select>
+                    <div>
+                        <small style="color: #666;">Approved By</small>
+                        <div style="font-weight: 600;" id="view_app"></div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeModal('editRequestModal')">Cancel</button>
-                    <button type="submit" class="btn-save">Save Changes</button>
-                </div>
-            </form>
+
+                <h4 style="margin-bottom: 1rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem;">Request Items</h4>
+                <table class="styled-table" style="margin-bottom: 0;">
+                    <thead>
+                        <tr>
+                            <th>Item Description</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody id="view_items_table_body">
+                        <!-- Items will be populated here via JS -->
+                    </tbody>    
+                </table>
+            </div>
+            <div class="modal-footer">
+                <form id="approveRequestForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn-save" style="background-color: #2ecc71; border-color: #2ecc71; margin-right: 0.5rem;">Approve</button>
+                </form>
+                <form id="declineRequestForm" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to decline this request?');">
+                    <button type="submit" class="btn-save" style="background-color: #e74c3c; border-color: #e74c3c; margin-right: 0.5rem;">Decline</button>
+                </form>
+                <button type="button" class="btn-cancel" onclick="closeModal('viewRequestModal')">Close</button>
+            </div>
         </div>
     </div>
 
     <script>
+        function searchRequestsTable() {
+            var input, filter, deptFilter, table, tr, i, mrsTd, deptTd, reqTd, statusTd;
+            input = document.getElementById("searchInput");
+            filter = input.value.toUpperCase();
+            deptFilter = document.getElementById("deptFilter").value.toUpperCase();
+            table = document.getElementById("requestsTable");
+            tr = table.getElementsByTagName("tr");
+
+            for (i = 1; i < tr.length; i++) { // Start from 1 to skip header
+                // Columns to search: MRS No. (0), Department (2), Requested By (3), Status (5)
+                mrsTd = tr[i].getElementsByTagName("td")[0];
+                deptTd = tr[i].getElementsByTagName("td")[2];
+                reqTd = tr[i].getElementsByTagName("td")[3];
+                statusTd = tr[i].getElementsByTagName("td")[5];
+
+                if (mrsTd && deptTd && reqTd && statusTd) {
+                    var mrsText = mrsTd.textContent || mrsTd.innerText;
+                    var deptText = deptTd.textContent || deptTd.innerText;
+                    var reqText = reqTd.textContent || reqTd.innerText;
+                    var statusText = statusTd.textContent || statusTd.innerText;
+
+                    var textMatch = (mrsText.toUpperCase().indexOf(filter) > -1 ||
+                        deptText.toUpperCase().indexOf(filter) > -1 ||
+                        reqText.toUpperCase().indexOf(filter) > -1 ||
+                        statusText.toUpperCase().indexOf(filter) > -1);
+
+                    var deptMatch = true;
+                    if (deptFilter && deptFilter !== "") {
+                        if (deptText.toUpperCase().indexOf(deptFilter) === -1) deptMatch = false;
+                    }
+
+                    if (textMatch && deptMatch) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
         }
 
-        function openEditModal(btn) {
+        function openViewModal(btn) {
             const id = btn.getAttribute('data-id');
-            document.getElementById('edit_mrs_no').value = btn.getAttribute('data-mrs');
-            document.getElementById('edit_department').value = btn.getAttribute('data-dept');
-            document.getElementById('edit_requester_name').value = btn.getAttribute('data-req');
-            document.getElementById('edit_approver_name').value = btn.getAttribute('data-app');
-            document.getElementById('edit_status').value = btn.getAttribute('data-status');
-            document.getElementById('editRequestForm').action = "/requests/edit/" + id;
-            document.getElementById('editRequestModal').classList.add('active');
+            const status = btn.getAttribute('data-status');
+            
+            // Populate Header Info
+            document.getElementById('view_mrs').textContent = btn.getAttribute('data-mrs');
+            document.getElementById('view_date').textContent = btn.getAttribute('data-date');
+            document.getElementById('view_dept').textContent = btn.getAttribute('data-dept');
+            document.getElementById('view_req').textContent = btn.getAttribute('data-req');
+            document.getElementById('view_app').textContent = btn.getAttribute('data-app');
+
+            // Setup Approve Button
+            const approveForm = document.getElementById('approveRequestForm');
+            approveForm.action = "/requests/approve/" + id;
+
+            // Setup Decline Button
+            const declineForm = document.getElementById('declineRequestForm');
+            declineForm.action = "/requests/decline/" + id;
+
+            if (status === 'Approved' || status === 'Rejected' || status === 'Declined') {
+                approveForm.style.display = 'none';
+                declineForm.style.display = 'none';
+            } else {
+                approveForm.style.display = 'inline';
+                declineForm.style.display = 'inline';
+            }
+
+            // Show Modal
+            document.getElementById('viewRequestModal').classList.add('active');
+
+            // Fetch Items
+            const tbody = document.getElementById('view_items_table_body');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">Loading items...</td></tr>';
+
+            // Note: Ensure you have a backend route /get_request_items/<id> that returns JSON
+            fetch(`/get_request_items/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    tbody.innerHTML = '';
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            const row = `
+                                <tr>
+                                    <td>${item.item_description}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>${item.unit || '-'}</td>
+                                    <td>${item.purpose || '-'}</td>
+                                </tr>
+                            `;
+                            tbody.innerHTML += row;
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No items found.</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red; padding: 20px;">Error loading items. Please ensure the backend route exists.</td></tr>';
+                });
         }
 
         window.onclick = function(event) {

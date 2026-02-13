@@ -73,10 +73,51 @@ def dashboard():
     # Fetch Recent Requests with Status Logic
     cursor.execute("SELECT * FROM requests ORDER BY created_at DESC LIMIT 5")
     recent_requests = cursor.fetchall()
+
+    # --- Chart Data Calculation ---
+    
+    # 1. Weekly Data (Current Week, Mon-Sun)
+    weekly_counts = [0] * 7
+    cursor.execute("""
+        SELECT DAYOFWEEK(request_date) as day_num, COUNT(*) as count 
+        FROM requests 
+        WHERE YEARWEEK(request_date, 1) = YEARWEEK(CURDATE(), 1) 
+        GROUP BY day_num
+    """)
+    for row in cursor.fetchall():
+        # DAYOFWEEK: 1=Sun, 2=Mon ... 7=Sat. Convert to 0=Mon ... 6=Sun
+        if row['day_num']:
+            idx = (row['day_num'] + 5) % 7
+            weekly_counts[idx] = row['count']
+
+    # 2. Monthly Data (Current Year, Jan-Dec)
+    monthly_counts = [0] * 12
+    cursor.execute("""
+        SELECT MONTH(request_date) as month_num, COUNT(*) as count 
+        FROM requests 
+        WHERE YEAR(request_date) = YEAR(CURDATE()) 
+        GROUP BY month_num
+    """)
+    for row in cursor.fetchall():
+        # MONTH: 1=Jan ... 12=Dec. Index: 0..11
+        if row['month_num']:
+            idx = row['month_num'] - 1
+            if 0 <= idx < 12:
+                monthly_counts[idx] = row['count']
+
+    # 3. Yearly Data (Last 5 Years)
+    current_year = datetime.now().year
+    start_year = current_year - 4
+    years_labels = list(range(start_year, current_year + 1))
+    yearly_counts_map = {}
+    cursor.execute("SELECT YEAR(request_date) as year_num, COUNT(*) as count FROM requests WHERE YEAR(request_date) >= %s GROUP BY year_num", (start_year,))
+    for row in cursor.fetchall():
+        yearly_counts_map[row['year_num']] = row['count']
+    yearly_counts = [yearly_counts_map.get(year, 0) for year in years_labels]
     
     cursor.close()
     conn.close()
-    return render_template('admin/dashboard.html', total_requests=total_requests, pending_requests=pending_requests, approved_requests=approved_requests, recent_requests=recent_requests, low_stock_items=low_stock_items)
+    return render_template('admin/dashboard.html', total_requests=total_requests, pending_requests=pending_requests, approved_requests=approved_requests, recent_requests=recent_requests, low_stock_items=low_stock_items, weekly_data=weekly_counts, monthly_data=monthly_counts, yearly_data=yearly_counts, years_labels=years_labels)
 
 @app.route('/inventory')
 @login_required
@@ -109,12 +150,13 @@ def inventory():
 def add_inventory_item():
     if request.method == 'POST':
         item_name = request.form['item_name']
+        category = request.form['category']
         stock_quantity = request.form['stock_quantity']
         unit = request.form['unit']
         
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO inventory (item_name, stock_quantity, unit) VALUES (%s, %s, %s)", (item_name, stock_quantity, unit))
+        cursor.execute("INSERT INTO inventory (item_name, category, stock_quantity, unit) VALUES (%s, %s, %s, %s)", (item_name, category, stock_quantity, unit))
         conn.commit()
         cursor.close()
         conn.close()
@@ -126,12 +168,13 @@ def add_inventory_item():
 def edit_inventory_item(id):
     if request.method == 'POST':
         item_name = request.form['item_name']
+        category = request.form['category']
         stock_quantity = request.form['stock_quantity']
         unit = request.form['unit']
         
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE inventory SET item_name=%s, stock_quantity=%s, unit=%s WHERE id=%s", (item_name, stock_quantity, unit, id))
+        cursor.execute("UPDATE inventory SET item_name=%s, category=%s, stock_quantity=%s, unit=%s WHERE id=%s", (item_name, category, stock_quantity, unit, id))
         conn.commit()
         cursor.close()
         conn.close()
@@ -180,6 +223,38 @@ def edit_request(id):
         flash('Request updated successfully', 'success')
         return redirect(url_for('requests'))
 
+@app.route('/requests/approve/<int:id>', methods=['POST'])
+@login_required
+def approve_request(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Deduct inventory based on request items
+    cursor.execute("SELECT item_description, quantity FROM request_items WHERE request_id = %s", (id,))
+    items = cursor.fetchall()
+    for item in items:
+        cursor.execute("UPDATE inventory SET stock_quantity = stock_quantity - %s WHERE item_name = %s", (item[1], item[0]))
+
+    cursor.execute("UPDATE requests SET status='Approved' WHERE id=%s", (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash('Request approved successfully', 'success')
+    return redirect(url_for('requests'))
+
+@app.route('/requests/decline/<int:id>', methods=['POST'])
+@login_required
+def decline_request(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    approver_name = session.get('username', 'Admin')
+    cursor.execute("UPDATE requests SET status='Declined', approver_name=%s WHERE id=%s", (approver_name, id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash('Request declined successfully', 'success')
+    return redirect(url_for('requests'))
+
 @app.route('/requests/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_request(id):
@@ -192,6 +267,17 @@ def delete_request(id):
     conn.close()
     flash('Request deleted successfully', 'success')
     return redirect(url_for('requests'))
+
+@app.route('/get_request_items/<int:id>')
+@login_required
+def get_request_items(id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT item_description, quantity, unit, purpose FROM request_items WHERE request_id = %s", (id,))
+    items = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(items)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -209,26 +295,145 @@ def login():
         if user:
             session['admin_logged_in'] = True
             session['username'] = user['username']
+            session['first_name'] = user.get('first_name') or user.get('firstname')
+            session['last_name'] = user.get('last_name') or user.get('lastname')
             return redirect(url_for('dashboard'))
         else:
             flash('Invalid username or password', 'error')
             
     return render_template('admin/login.html')
 
-@app.route('/profile')
+@app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    return render_template('admin/profile.html')
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    if request.method == 'POST':
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+        email = request.form['email']
+        username = session.get('username')
+        
+        cursor.execute("UPDATE admin SET first_name=%s, last_name=%s, email=%s WHERE username=%s", 
+                       (first_name, last_name, email, username))
+        conn.commit()
+        session['first_name'] = first_name
+        session['last_name'] = last_name
+        session.modified = True
+        flash('Profile updated successfully', 'success')
+        cursor.close()
+        conn.close()
+        return redirect(url_for('profile'))
 
-@app.route('/change_password')
+    username = session.get('username')
+    cursor.execute("SELECT * FROM admin WHERE username = %s", (username,))
+    admin = cursor.fetchone()
+    
+    cursor.close()
+    conn.close()
+
+    if not admin:
+        session.clear()
+        flash('User not found. Please login again.', 'error')
+        return redirect(url_for('login'))
+
+    return render_template('admin/profile.html', admin=admin)
+
+@app.route('/change_password', methods=['GET', 'POST'])
 @login_required
 def change_password():
+    if request.method == 'POST':
+        current_password = request.form['current_password']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+        username = session['username']
+        
+        if new_password != confirm_password:
+            flash('New passwords do not match!', 'error')
+            return redirect(url_for('change_password'))
+            
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        
+        # Verify current password (assuming plain text as per login logic)
+        cursor.execute("SELECT * FROM admin WHERE username = %s AND password = %s", (username, current_password))
+        user = cursor.fetchone()
+        
+        if user:
+            cursor.execute("UPDATE admin SET password = %s WHERE username = %s", (new_password, username))
+            conn.commit()
+            flash('Password changed successfully!', 'success')
+        else:
+            flash('Incorrect current password.', 'error')
+            
+        cursor.close()
+        conn.close()
+        return redirect(url_for('change_password'))
+        
     return render_template('admin/change_password.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+def time_ago(date):
+    """
+    Calculates the time difference between a given datetime and now,
+    and returns a human-readable string.
+    """
+    if not date:
+        return ""
+    now = datetime.now()
+    if date.tzinfo:
+        now = datetime.now(date.tzinfo)
+
+    diff = now - date
+    s = diff.total_seconds()
+
+    if s < 60:
+        return 'just now'
+    elif s < 3600:
+        return f'{int(s/60)}m ago'
+    elif s < 86400:
+        return f'{int(s/3600)}h ago'
+    elif s < 2592000: # 30 days
+        days = int(s/86400)
+        return f'{days}d ago'
+    else:
+        return date.strftime('%b %d, %Y')
+
+@app.route('/api/pending_count')
+@login_required
+def pending_count():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT COUNT(*) as count FROM requests WHERE status = 'Pending'")
+    count = cursor.fetchone()['count']
+    cursor.close()
+    conn.close()
+    return jsonify({'count': count})
+
+@app.route('/api/notifications')
+@login_required
+def get_notifications():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT id, mrs_no, department, requester_name, created_at, status FROM requests ORDER BY created_at DESC LIMIT 15")
+    requests = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    notifications = []
+    for req in requests:
+        is_unread = req['status'] == 'Pending'
+        text = f"New request from <strong>{req['requester_name']}</strong> ({req['department']}) with MRS No. {req['mrs_no']}."
+        if not is_unread:
+            text = f"Request {req['mrs_no']} from <strong>{req['requester_name']}</strong> was {req['status'].lower()}."
+
+        notifications.append({'id': req['id'], 'text': text, 'time': time_ago(req['created_at']), 'unread': is_unread, 'url': url_for('requests')})
+    return jsonify(notifications)
 
 @app.route('/submit_request', methods=['POST'])
 def submit_request():
@@ -290,5 +495,38 @@ def submit_request():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
+def check_db_schema():
+    """Checks and updates the database schema for missing columns."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # List of columns to check and add if missing
+        columns_to_check = [
+            ('first_name', 'VARCHAR(100)'),
+            ('last_name', 'VARCHAR(100)'),
+            ('email', 'VARCHAR(100)')
+        ]
+        
+        for col_name, col_type in columns_to_check:
+            cursor.execute(f"SHOW COLUMNS FROM admin LIKE '{col_name}'")
+            if not cursor.fetchone():
+                print(f"Adding missing column '{col_name}' to admin table...")
+                cursor.execute(f"ALTER TABLE admin ADD COLUMN {col_name} {col_type}")
+        
+        # Ensure default admin user has first_name and last_name set
+        cursor.execute("""
+            UPDATE admin 
+            SET first_name = 'System', last_name = 'Admin' 
+            WHERE username = 'admin' AND (first_name IS NULL OR last_name IS NULL)
+        """)
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Schema check warning: {e}")
+
 if __name__ == '__main__':
+    check_db_schema() # Run schema check on startup
     app.run(debug=True)

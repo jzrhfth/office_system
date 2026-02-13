@@ -6,6 +6,7 @@ USE office_supplies_db;
 CREATE TABLE IF NOT EXISTS inventory (
     id INT AUTO_INCREMENT PRIMARY KEY,
     item_name VARCHAR(255) NOT NULL,
+    category VARCHAR(100),
     stock_quantity INT DEFAULT 0,
     unit VARCHAR(50), -- Displayed in table header
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -51,10 +52,14 @@ CREATE TABLE IF NOT EXISTS request_items (
 CREATE TABLE IF NOT EXISTS admin (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
     email VARCHAR(255),
     password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Insert default admin user
-INSERT IGNORE INTO admin (username, email, password) VALUES ('admin', 'admin@example.com', 'admin123');
+INSERT INTO admin (username, email, password, first_name, last_name) 
+VALUES ('admin', 'admin@example.com', 'admin123', 'Saira Mae', 'Necosia')
+ON DUPLICATE KEY UPDATE first_name='Saira Mae', last_name='Necosia';

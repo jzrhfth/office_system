@@ -47,12 +47,17 @@
                 <div class="table-card">
                     <div class="table-title">
                         <span>All Office Supplies</span>
+                        <div style="margin-left: auto; margin-right: 10px; position: relative;">
+                            <i class="fa-solid fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #aaa;"></i>
+                            <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search items..." style="padding: 8px 8px 8px 35px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
                         <a href="#" class="btn-new"><i class="fa-solid fa-plus"></i> Add New Item</a>
                     </div>
-                    <table class="styled-table">
+                    <table class="styled-table" id="inventoryTable">
                         <thead>
                             <tr>
                                 <th>Item Name</th>
+                                <th>Category</th>
                                 <th>Stock Quantity</th>
                                 <th>Unit</th>
                                 <th>Status</th>
@@ -63,6 +68,7 @@
                             {% for item in inventory_items %}
                             <tr>
                                 <td>{{ item.item_name }}</td>
+                                <td>{{ item.category }}</td>
                                 <td>{{ item.stock_quantity }}</td>
                                 <td>{{ item.unit }}</td>
                                 <td>
@@ -78,6 +84,7 @@
                                     <a href="#" class="btn-action" title="Edit" 
                                        data-id="{{ item.id }}"
                                        data-name="{{ item.item_name }}"
+                                       data-category="{{ item.category }}"
                                        data-qty="{{ item.stock_quantity }}"
                                        data-unit="{{ item.unit or '' }}"
                                        onclick="openEditModal(this)"><i class="fa-regular fa-pen-to-square"></i></a>
@@ -106,6 +113,20 @@
                     <div class="form-group">
                         <label>Item Name</label>
                         <input type="text" name="item_name" placeholder="e.g. A4 Paper Ream" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="category" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                            <option value="" disabled selected>Select Category</option>
+                            <option value="Paper Products">Paper Products</option>
+                            <option value="Writing Instruments">Writing Instruments</option>
+                            <option value="Filing & Storage">Filing & Storage</option>
+                            <option value="Desk Accessories">Desk Accessories</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Furniture">Furniture</option>
+                            <option value="Janitorial">Janitorial</option>
+                            <option value="Others">Others</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Stock Quantity</label>
@@ -147,6 +168,20 @@
                         <input type="text" id="edit_item_name" name="item_name" required>
                     </div>
                     <div class="form-group">
+                        <label>Category</label>
+                        <select id="edit_category" name="category" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                            <option value="" disabled selected>Select Category</option>
+                            <option value="Paper Products">Paper Products</option>
+                            <option value="Writing Instruments">Writing Instruments</option>
+                            <option value="Filing & Storage">Filing & Storage</option>
+                            <option value="Desk Accessories">Desk Accessories</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Furniture">Furniture</option>
+                            <option value="Janitorial">Janitorial</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>Stock Quantity</label>
                         <input type="number" id="edit_stock_quantity" name="stock_quantity" min="0" required>
                     </div>
@@ -173,6 +208,31 @@
     </div>
 
     <script>
+        function searchTable() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("searchInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("inventoryTable");
+            tr = table.getElementsByTagName("tr");
+
+            for (i = 1; i < tr.length; i++) {
+                // Search in Item Name (index 0) and Category (index 1)
+                var tdName = tr[i].getElementsByTagName("td")[0];
+                var tdCategory = tr[i].getElementsByTagName("td")[1];
+                
+                if (tdName && tdCategory) {
+                    var txtName = tdName.textContent || tdName.innerText;
+                    var txtCategory = tdCategory.textContent || tdCategory.innerText;
+                    
+                    if (txtName.toUpperCase().indexOf(filter) > -1 || txtCategory.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
         // Modal Functions
         function openModal(modalId) {
             document.getElementById(modalId).classList.add('active');
@@ -186,10 +246,12 @@
         function openEditModal(btn) {
             const id = btn.getAttribute('data-id');
             const name = btn.getAttribute('data-name');
+            const category = btn.getAttribute('data-category');
             const qty = btn.getAttribute('data-qty');
             const unit = btn.getAttribute('data-unit');
 
             document.getElementById('edit_item_name').value = name;
+            document.getElementById('edit_category').value = category;
             document.getElementById('edit_stock_quantity').value = qty;
             document.getElementById('edit_unit').value = unit;
             document.getElementById('editItemForm').action = "/inventory/edit/" + id;

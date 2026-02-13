@@ -116,11 +116,81 @@ function clearForm() {
     if (formDateEl) formDateEl.valueAsDate = new Date();
 }
 
+function submitAndPrint() {
+    window.print();
+
+    if (confirm("Do you want to save this request to the admin?")) {
+        // Gather Form Data
+        const formData = { 
+            date: document.getElementById('formDate').value,
+            department: document.getElementById('department').value,
+            mrsNo: document.getElementById('mrsNo').value,
+            requester: {
+                name: document.getElementById('reqName').value,
+                position: document.getElementById('reqPosition').value,
+                date: document.getElementById('reqDate').value
+            },
+            approver: {
+                name: document.getElementById('appName').value,
+                position: document.getElementById('appPosition').value,
+                date: document.getElementById('appDate').value
+            },
+            items: []
+        };
+
+        // Gather Table Items
+        const tableBody = document.getElementById('tableBody');
+        const rows = tableBody.getElementsByTagName('tr');
+        
+        for (let i = 0; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            if (cells.length >= 5) {
+                // Helper to get value from input/select inside a cell
+                const getVal = (cell) => {
+                    const input = cell.querySelector('input, select, textarea');
+                    return input ? input.value : cell.innerText;
+                };
+
+                const description = getVal(cells[1]);
+                // Only add item if description is not empty
+                if (description && description.trim() !== "") {
+                    formData.items.push({
+                        description: description,
+                        quantity: getVal(cells[2]),
+                        unit: getVal(cells[3]),
+                        purpose: getVal(cells[4])
+                    });
+                }
+            }
+        }
+
+        // Submit to Backend
+        fetch('/submit_request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error submitting request: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while submitting the request.');
+        });
+    }
+}
+
 // Expose functions to global scope so inline onclicks work
 window.addRow = addRow;
 window.removeLastRow = removeLastRow;
 window.clearForm = clearForm;
 window.deleteRow = deleteRow;
+window.submitAndPrint = submitAndPrint;
 
 // Initialize once DOM is ready
 if (document.readyState === 'loading') {

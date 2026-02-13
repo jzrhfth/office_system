@@ -106,13 +106,18 @@
         document.addEventListener('DOMContentLoaded', function() {
             const ctx = document.getElementById('requestsChart').getContext('2d');
             
-            // Mock Data for Statistics
+            // Data from Backend
+            const weeklyData = {{ weekly_data | tojson }};
+            const monthlyData = {{ monthly_data | tojson }};
+            const yearlyData = {{ yearly_data | tojson }};
+            const yearlyLabels = {{ years_labels | tojson }};
+
             const data = {
                 weekly: {
                     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                     datasets: [{
                         label: 'Requests',
-                        data: [0, 0, 0, 0, 0, 0, 0],
+                        data: weeklyData,
                         borderColor: '#4A90E2',
                         backgroundColor: 'rgba(74, 144, 226, 0.1)',
                         tension: 0.4,
@@ -123,7 +128,7 @@
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                     datasets: [{
                         label: 'Requests',
-                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        data: monthlyData,
                         borderColor: '#2ecc71',
                         backgroundColor: 'rgba(46, 204, 113, 0.1)',
                         tension: 0.4,
@@ -131,10 +136,10 @@
                     }]
                 },
                 yearly: {
-                    labels: ['2021', '2022', '2023', '2024', '2025'],
+                    labels: yearlyLabels,
                     datasets: [{
                         label: 'Requests',
-                        data: [0, 0, 0, 0, 0],
+                        data: yearlyData,
                         borderColor: '#9c27b0',
                         backgroundColor: 'rgba(156, 39, 176, 0.1)',
                         tension: 0.4,
@@ -151,7 +156,12 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#f0f0f0' } },
+                        y: { 
+                            beginAtZero: true, 
+                            suggestedMax: 10,
+                            ticks: { stepSize: 1 },
+                            grid: { borderDash: [2, 4], color: '#f0f0f0' } 
+                        },
                         x: { grid: { display: false } }
                     }
                 }

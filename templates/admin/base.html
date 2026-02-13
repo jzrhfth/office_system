@@ -23,16 +23,34 @@
         </div>
 
         <div class="header-right">
+            <div class="notification-container">
+                <button type="button" class="icon-btn" title="Notifications" id="notificationBtn">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge"></span>
+                </button>
 
-            <button type="button" class="icon-btn" title="Notifications">
-                <i class="fa-regular fa-bell"></i>
-                <span class="notification-badge"></span>
-            </button>
+                <div class="notifications-panel" id="notificationsPanel">
+                    <div class="panel-header">
+                        <h1>Notifications</h1>
+                    </div>
+                    <div class="panel-tabs">
+                        <button class="tab active" data-tab="all">All</button>
+                        <button class="tab" data-tab="unread">Unread</button>
+                    </div>
+                    <div class="notifications-list" id="notificationsList">
+                        <!-- JS will populate this -->
+                    </div>
+                    <div class="panel-footer">
+                        <a href="{{ url_for('requests') }}">See all notifications</a>
+                        </a>
+                    </div>
+                </div>
+            </div>
 
             <div class="user-profile">
-                <div class="user-avatar">AD</div>
+                <div class="user-avatar">{{ (session.get('first_name') or 'Admin')[0] | upper }}</div>
                 <div class="user-info">
-                    <span class="user-name">Admin</span>
+                    <span class="user-name">{{ session.get('first_name') or 'Admin' }}</span>
                     <span class="user-role">Administrator</span>
                 </div>
             </div>

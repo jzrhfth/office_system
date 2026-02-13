@@ -32,24 +32,24 @@
             <div class="info-grid">
                 <div class="form-group">
                     <label>Date</label>
-                <input type="date" id="formDate">
-            </div>
+                    <input type="date" id="formDate">
+                </div>
                 <div class="form-group">
                     <label>Department</label>
-                <select id="department">
-                    <option value="">Select Department</option>
-                    <option value="Auxiliary">Auxiliary</option>
-                    <option value="HR">Human Resources</option>
-                    <option value="Finance">Finance & Accounting</option>
-                    <option value="CS">Customer Care</option>
-                    <option value="Operations">Engineering</option>
-                    <option value="FD">Front Office</option>
-                </select>
-            </div>
+                    <select id="department">
+                        <option value="">Select Department</option>
+                        <option value="Auxiliary">Auxiliary</option>
+                        <option value="Human Resources">Human Resources</option>
+                        <option value="Finance & Accounting">Finance & Accounting</option>
+                        <option value="Customer Care">Customer Care</option>
+                        <option value="Operations">Engineering</option>
+                        <option value="Front Office">Front Office</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>MRS Number</label>
-                <input type="text" id="mrsNo" value="{{ new_mrs_no }}" readonly>
-            </div>  
+                    <input type="text" id="mrsNo" value="{{ new_mrs_no }}" readonly>
+                </div>  
         </div>
             <div class="button-group">
                 <button class="btn-add" onclick="addRow()"><span>+ Add Row</span></button>
@@ -125,71 +125,4 @@
 
 </body>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-<script>
-    function submitAndPrint() {
-        // Gather Form Data
-        const formData = {
-            date: document.getElementById('formDate').value,
-            department: document.getElementById('department').value,
-            mrsNo: document.getElementById('mrsNo').value,
-            requester: {
-                name: document.getElementById('reqName').value,
-                position: document.getElementById('reqPosition').value,
-                date: document.getElementById('reqDate').value
-            },
-            approver: {
-                name: document.getElementById('appName').value,
-                position: document.getElementById('appPosition').value,
-                date: document.getElementById('appDate').value
-            },
-            items: []
-        };
-
-        // Gather Table Items
-        const tableBody = document.getElementById('tableBody');
-        const rows = tableBody.getElementsByTagName('tr');
-        
-        for (let i = 0; i < rows.length; i++) {
-            const cells = rows[i].getElementsByTagName('td');
-            if (cells.length >= 5) {
-                // Helper to get value from input/select inside a cell
-                const getVal = (cell) => {
-                    const input = cell.querySelector('input, select, textarea');
-                    return input ? input.value : cell.innerText;
-                };
-
-                const description = getVal(cells[1]);
-                // Only add item if description is not empty
-                if (description && description.trim() !== "") {
-                    formData.items.push({
-                        description: description,
-                        quantity: getVal(cells[2]),
-                        unit: getVal(cells[3]),
-                        purpose: getVal(cells[4])
-                    });
-                }
-            }
-        }
-
-        // Submit to Backend
-        fetch('/submit_request', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.print();
-                window.location.reload();
-            } else {
-                alert('Error submitting request: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while submitting the request.');
-        });
-    }
-</script>
 </html>
