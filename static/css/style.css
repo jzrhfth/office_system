@@ -140,7 +140,7 @@ body {
 .form-group select {
     width: 100%;
     padding: 14px 16px;
-    border: 2px solid var(--border-gray);
+    border: 2px solid #101011;
     border-radius: 8px;
     font-size: 15px;
     font-family: 'DM Sans', sans-serif;
@@ -521,7 +521,7 @@ button span {
         width: 100%;
         border: 1px solid #000;
         border-radius: 8px;
-        border: 2px solid var(--border-gray);
+        border: 2px solid #101011;
         color: #000; 
         box-shadow: none;
         padding: 17px;
@@ -572,9 +572,10 @@ button span {
     }
 
     td {
-        border: 1px solid #000;
+        border: 1px solid #000 !important;
         color: #000;
         font-family: "Times New Roman", Times, serif;
+        background-color: white !important;
     }
 
     /* Hide Action Column */
@@ -621,6 +622,11 @@ button span {
         appearance: none;
         background: transparent;
     }
+
+    select.empty-select {
+        color: transparent;
+    }
+    
 
     input::placeholder {
         color: transparent;

@@ -1,7 +1,21 @@
 let rowCount = 0;
+let inventoryItems = [];
+
+// Fetch inventory items for dropdowns
+async function fetchInventoryItems() {
+    try {
+        const response = await fetch('/api/inventory_items');
+        if (response.ok) {
+            inventoryItems = await response.json();
+        }
+    } catch (error) {
+        console.error('Failed to fetch inventory items:', error);
+    }
+}
 
 // Initialize with 5 rows
-function initializeTable() {
+async function initializeTable() {
+    await fetchInventoryItems(); // Load inventory data first
     const tableBody = document.getElementById('tableBody');
     if (tableBody) tableBody.innerHTML = '';
     rowCount = 0;
@@ -37,21 +51,36 @@ function addRow() {
     rowCount++;
     const tableBody = document.getElementById('tableBody');
     if (!tableBody) return;
+
+    // Build Inventory Dropdown Options with Categories
+    let itemOptions = '<option value="" disabled selected>Select Item</option>';
+
+    inventoryItems.forEach(item => {
+        // Store unit in data attribute for auto-fill
+        itemOptions += `<option value="${item.item_name}" data-unit="${item.unit || ''}">${item.item_name}</option>`;
+    });
+
     const newRow = document.createElement('tr');
     newRow.className = 'animate-row';
     newRow.innerHTML = `
         <td>${rowCount}</td>
-        <td><input type="text" name="description[]" class="item-desc" placeholder=""></td>
+        <td>
+            <select name="description[]" class="item-desc empty-select" onchange="autoSelectUnit(this)">
+                ${itemOptions}
+            </select>
+        </td>
         <td><input type="number" name="quantity[]" class="item-qty" min="0" placeholder=""></td>
         <td>
-            <select name="unit[]">
+            <select name="unit[]" class="item-unit">
                 <option value=""></option>
-                <option value="pcs">pcs</option>
-                <option value="box">box</option>
-                <option value="pack">pack</option>
-                <option value="ream">ream</option>
-                <option value="set">set</option>
-                <option value="unit">unit</option>
+                <option value="Pcs">pcs</option>
+                <option value="Box">box</option>
+                <option value="Ream">ream</option>
+                <option value="Pack">pack</option>
+                <option value="Set">set</option>
+                <option value="Roll">roll</option>
+                <option value="Bundle">bundle</option>
+                <option value="Unit">unit</option>
             </select>
         </td>
         <td><input type="text" name="purpose[]" class="item-purpose" placeholder=""></td>
@@ -185,12 +214,34 @@ function submitAndPrint() {
     }
 }
 
+// Auto-select unit based on inventory item selection
+function autoSelectUnit(selectElement) {
+    // Toggle empty class for print styling
+    if (selectElement.value === "") {
+        selectElement.classList.add('empty-select');
+    } else {
+        selectElement.classList.remove('empty-select');
+    }
+
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const unit = selectedOption.getAttribute('data-unit');
+    
+    if (unit) {
+        const row = selectElement.closest('tr');
+        const unitSelect = row.querySelector('.item-unit');
+        if (unitSelect) {
+            unitSelect.value = unit;
+        }
+    }
+}
+
 // Expose functions to global scope so inline onclicks work
 window.addRow = addRow;
 window.removeLastRow = removeLastRow;
 window.clearForm = clearForm;
 window.deleteRow = deleteRow;
 window.submitAndPrint = submitAndPrint;
+window.autoSelectUnit = autoSelectUnit;
 
 // Initialize once DOM is ready
 if (document.readyState === 'loading') {

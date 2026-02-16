@@ -435,6 +435,17 @@ def get_notifications():
         notifications.append({'id': req['id'], 'text': text, 'time': time_ago(req['created_at']), 'unread': is_unread, 'url': url_for('requests')})
     return jsonify(notifications)
 
+@app.route('/api/inventory_items')
+def get_inventory_items_api():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    # Order by name
+    cursor.execute("SELECT item_name, category, unit FROM inventory ORDER BY item_name ASC")
+    items = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(items)
+
 @app.route('/submit_request', methods=['POST'])
 def submit_request():
     try:
