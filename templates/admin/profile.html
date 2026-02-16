@@ -14,13 +14,6 @@
         </div>
 
         <div class="profile-container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}" style="margin-bottom: 1rem;">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
             <div class="profile-card">
                 <div class="profile-header">
                     <div class="profile-avatar">{{ (admin.first_name or admin.firstname or 'Admin')[0] | upper }}</div>
